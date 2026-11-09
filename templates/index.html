@@ -1,0 +1,3028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if page_mode == 'report' %}Full Report — Complete Review Intelligence{% elif page_mode == 'sentiment' %}Sentiment &amp; Mismatches — Customer Emotion Analysis{% elif page_mode == 'raw' %}Raw Reviews — Customer Feedback Dataset{% else %}Flipkart Review Scraper — Understand Every Review{% endif %}</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js for data visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      /* Area Design System — Warm, Earthy, Editorial Palette */
+      --bg-page: #F7F6F0;
+      --card-sand: #EAE5D9;
+      --card-sand-light: #F2EFE9;
+      --card-sand-hover: #E2DCD0;
+      --card-white: #FFFFFF;
+      --accent-olive: #566344;
+      --accent-olive-hover: #434E35;
+      --accent-olive-subtle: rgba(86, 99, 68, 0.12);
+      --accent-sage: #DCE4D2;
+      --accent-sage-subtle: rgba(220, 228, 210, 0.45);
+      --text-charcoal: #242720;
+      --text-muted: #77796F;
+      --text-dim: #999A90;
+      --border-warm: #E5E2D9;
+      --border-warm-strong: #D5D0C2;
+      
+      --color-positive: #566344;
+      --color-negative: #B85042;
+      --color-neutral: #8A8578;
+      --color-warning: #C87D2E;
+
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 10px;
+      --radius-md: 18px;
+      --radius-lg: 26px;
+      --radius-xl: 32px;
+      --radius-pill: 9999px;
+
+      --shadow-soft: 0 8px 30px rgba(86, 99, 68, 0.05);
+      --shadow-card: 0 14px 38px rgba(86, 99, 68, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-charcoal);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Editorial Typography */
+    h1, h2, h3, h4, .font-serif {
+      font-family: var(--font-serif);
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* Common Buttons */
+    .btn-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-pill);
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+      font-family: var(--font-sans);
+      white-space: nowrap;
+    }
+
+    .btn-olive {
+      background-color: var(--accent-olive);
+      color: #FFFFFF;
+      border-color: var(--accent-olive);
+    }
+    .btn-olive:hover:not(:disabled) {
+      background-color: var(--accent-olive-hover);
+      border-color: var(--accent-olive-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(86, 99, 68, 0.22);
+    }
+
+    .btn-sage {
+      background-color: var(--accent-sage);
+      color: var(--text-charcoal);
+      border-color: rgba(86, 99, 68, 0.15);
+    }
+    .btn-sage:hover:not(:disabled) {
+      background-color: #D1DBC5;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      color: var(--text-charcoal);
+      border-color: var(--border-warm-strong);
+    }
+    .btn-outline:hover:not(:disabled) {
+      background-color: var(--card-sand-light);
+      border-color: var(--accent-olive);
+      transform: translateY(-1px);
+    }
+
+    .btn-pill:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Layout Containers */
+    .site-wrapper {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* Header Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247, 246, 240, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border-warm);
+      transition: background 0.3s ease;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 80px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-charcoal);
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--accent-olive);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(86, 99, 68, 0.25);
+    }
+
+    .brand-text-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+      color: var(--text-charcoal);
+    }
+
+    .brand-sub {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .nav-links a:hover {
+      color: var(--text-charcoal);
+    }
+
+    .nav-action {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Sub-nav Mode Pills for Scraping Workspaces */
+    .mode-tab-bar {
+      display: inline-flex;
+      background: var(--card-sand);
+      padding: 5px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-warm);
+      gap: 4px;
+    }
+
+    .mode-tab-item {
+      padding: 8px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .mode-tab-item:hover {
+      color: var(--text-charcoal);
+    }
+
+    .mode-tab-item.active {
+      background: var(--accent-olive);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(86, 99, 68, 0.25);
+    }
+
+    /* Eyebrow Label */
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-olive);
+      margin-bottom: 14px;
+      background: var(--accent-sage);
+      padding: 4px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(86, 99, 68, 0.15);
+    }
+
+    /* ========================================================
+       LANDING PAGE STYLES
+       ======================================================== */
+    .hero-section {
+      padding: 72px 0 64px;
+      text-align: center;
+    }
+
+    .hero-content {
+      max-width: 820px;
+      margin: 0 auto 48px;
+    }
+
+    .hero-headline {
+      font-size: 4.2rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      color: var(--text-charcoal);
+      margin-bottom: 22px;
+      line-height: 1.05;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 36px;
+      font-weight: 400;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Hero Panoramic Card & Floating Insights */
+    .hero-visual-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .hero-visual-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(119, 121, 111, 0.18);
+    }
+
+    .hero-preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--accent-olive);
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-warm);
+    }
+
+    .hero-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .hero-stat-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-warm);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.25s ease;
+    }
+    .hero-stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .hero-stat-label {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .hero-stat-number {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--text-charcoal);
+      line-height: 1;
+    }
+
+    .hero-stat-meta {
+      font-size: 0.85rem;
+      color: var(--accent-olive);
+      font-weight: 500;
+    }
+
+    /* Abstract Data Density Banner */
+    .hero-density-banner {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      padding: 24px 30px;
+      border: 1px solid var(--border-warm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .density-bar-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .density-meter {
+      flex: 1;
+      height: 10px;
+      background: var(--card-sand);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      display: flex;
+    }
+
+    .density-segment-pos { background: var(--accent-olive); width: 72%; }
+    .density-segment-neu { background: #D5CEBD; width: 18%; }
+    .density-segment-neg { background: var(--color-negative); width: 10%; }
+
+    /* Benefits Section */
+    .section-benefits {
+      padding: 96px 0;
+      border-top: 1px solid var(--border-warm);
+    }
+
+    .section-header-centered {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 56px;
+    }
+
+    .section-headline {
+      font-size: 3.2rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      margin-bottom: 16px;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .benefit-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-lg);
+      padding: 36px 28px;
+      border: 1px solid var(--border-warm);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .benefit-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-card);
+      border-color: var(--accent-olive);
+      background: var(--card-sand-light);
+    }
+
+    .benefit-icon-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--accent-sage);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-olive);
+      border: 1px solid rgba(86, 99, 68, 0.18);
+    }
+
+    .benefit-card h3 {
+      font-size: 1.55rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+    }
+
+    .benefit-card p {
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    /* Abstract Geospatial / Density Landscape Card */
+    .landscape-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--border-warm);
+      padding: 48px;
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .landscape-info h4 {
+      font-size: 2.4rem;
+      margin-bottom: 14px;
+      color: var(--text-charcoal);
+    }
+
+    .landscape-info p {
+      font-size: 1.05rem;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .density-pill-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .density-pill {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border-warm);
+      padding: 8px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .density-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-olive);
+    }
+
+    .landscape-graphic {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--border-warm);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Product Showcase */
+    .section-showcase {
+      padding: 96px 0;
+      border-top: 1px solid var(--border-warm);
+    }
+
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .showcase-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      padding: 44px 36px;
+      border: 1px solid var(--border-warm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .showcase-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-card);
+      border-color: var(--accent-olive);
+      background: var(--card-sand-light);
+    }
+
+    .showcase-num {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--accent-olive);
+      letter-spacing: 0.08em;
+      margin-bottom: 18px;
+    }
+
+    .showcase-title {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      margin-bottom: 12px;
+    }
+
+    .showcase-desc {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .showcase-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 36px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(119, 121, 111, 0.15);
+    }
+
+    .showcase-features li {
+      font-size: 0.92rem;
+      color: var(--text-charcoal);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .showcase-features li svg {
+      color: var(--accent-olive);
+      flex-shrink: 0;
+    }
+
+    /* CTA Section */
+    .section-cta {
+      padding: 96px 0;
+    }
+
+    .cta-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      padding: 72px 40px;
+      text-align: center;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-card);
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .cta-card h2 {
+      font-size: 3.4rem;
+      color: var(--text-charcoal);
+      margin-bottom: 16px;
+    }
+
+    .cta-card p {
+      font-size: 1.2rem;
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--card-sand);
+      border-top: 1px solid var(--border-warm);
+      padding: 64px 0 40px;
+      margin-top: 60px;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 48px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand-info {
+      max-width: 380px;
+    }
+
+    .footer-links-group {
+      display: flex;
+      gap: 64px;
+      flex-wrap: wrap;
+    }
+
+    .footer-col h5 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-olive);
+      margin-bottom: 18px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: color 0.2s ease;
+    }
+    .footer-col a:hover {
+      color: var(--text-charcoal);
+    }
+
+    .footer-bottom {
+      padding-top: 24px;
+      border-top: 1px solid rgba(119, 121, 111, 0.18);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* ========================================================
+       SCRAPING WORKSPACE PAGES STYLES
+       ======================================================== */
+    .workspace-wrapper {
+      padding: 40px 0 80px;
+    }
+
+    .workspace-header {
+      margin-bottom: 32px;
+    }
+
+    .workspace-title {
+      font-size: 3.4rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      margin-bottom: 10px;
+    }
+
+    .workspace-desc {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 720px;
+    }
+
+    /* Scraper Form Container */
+    .scraper-control-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      padding: 32px 36px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-card);
+      margin-bottom: 36px;
+    }
+
+    .scraper-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .url-input-row {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .url-input-field {
+      flex: 1;
+      height: 54px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-pill);
+      padding: 0 24px 0 52px;
+      font-size: 0.98rem;
+      font-family: var(--font-sans);
+      color: var(--text-charcoal);
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .url-input-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .url-input-wrapper svg {
+      position: absolute;
+      left: 20px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .url-input-field:focus {
+      outline: none;
+      border-color: var(--accent-olive);
+      box-shadow: 0 0 0 3px rgba(86, 99, 68, 0.15);
+    }
+
+    .form-options-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(119, 121, 111, 0.15);
+    }
+
+    .options-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .select-dropdown {
+      height: 42px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-pill);
+      padding: 0 18px;
+      font-size: 0.88rem;
+      font-family: var(--font-sans);
+      color: var(--text-charcoal);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .checkbox-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-pill input {
+      accent-color: var(--accent-olive);
+      width: 16px;
+      height: 16px;
+    }
+
+    .export-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Progress Indicator */
+    #loadingState {
+      display: none;
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 36px;
+      text-align: center;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      margin: 20px 0 16px;
+      border: 1px solid var(--border-warm);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent-olive);
+      width: 0%;
+      border-radius: var(--radius-pill);
+      transition: width 0.3s ease;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      margin-bottom: 8px;
+    }
+
+    /* Error Message Box */
+    #errorBox {
+      display: none;
+      background: #FDF2F0;
+      border: 1px solid #EACBC6;
+      color: var(--color-negative);
+      padding: 18px 24px;
+      border-radius: var(--radius-md);
+      margin-bottom: 28px;
+      font-size: 0.94rem;
+    }
+
+    /* ========================================================
+       RESULTS DASHBOARD
+       ======================================================== */
+    #resultsDashboard {
+      display: none;
+    }
+
+    /* Product Meta Banner */
+    .product-meta-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-xl);
+      padding: 32px 36px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .product-title-wrap h2 {
+      font-size: 2.2rem;
+      color: var(--text-charcoal);
+      margin-bottom: 6px;
+    }
+
+    .product-stat-tags {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--card-sand);
+      color: var(--text-charcoal);
+      border: 1px solid var(--border-warm);
+    }
+
+    .meta-tag.olive {
+      background: var(--accent-sage);
+      color: var(--accent-olive);
+      border-color: rgba(86, 99, 68, 0.2);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .kpi-value {
+      font-family: var(--font-serif);
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--text-charcoal);
+      line-height: 1.1;
+    }
+
+    .kpi-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Visualizer Cards & Charts Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    .col-8 { grid-column: span 8; }
+    .col-12 { grid-column: span 12; }
+
+    .vis-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .vis-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .vis-card-title {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+    }
+
+    .vis-chart-box {
+      position: relative;
+      width: 100%;
+      height: 260px;
+    }
+
+    /* Rating Bars Component */
+    .rating-bars-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .rating-label {
+      width: 44px;
+      color: var(--text-charcoal);
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      border: 1px solid var(--border-warm);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      background: var(--accent-olive);
+      transition: width 0.5s ease;
+    }
+
+    .bar-fill.bar-5 { background: var(--accent-olive); }
+    .bar-fill.bar-4 { background: #71815B; }
+    .bar-fill.bar-3 { background: #9EA594; }
+    .bar-fill.bar-2 { background: #C8998C; }
+    .bar-fill.bar-1 { background: var(--color-negative); }
+
+    .rating-count {
+      width: 110px;
+      text-align: right;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    /* Topics Badges */
+    .topics-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .topic-pill {
+      background: #FFFFFF;
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-pill);
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-charcoal);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .topic-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .topic-dot.pos { background: var(--accent-olive); }
+    .topic-dot.neg { background: var(--color-negative); }
+    .topic-dot.neu { background: var(--text-dim); }
+
+    /* N-Grams phrases list */
+    .phrases-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .phrase-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #FFFFFF;
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 0.88rem;
+    }
+    .phrase-item.pos { border-left: 4px solid var(--accent-olive); }
+    .phrase-item.neg { border-left: 4px solid var(--color-negative); }
+
+    /* Data Table */
+    .table-container {
+      background: #FFFFFF;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-warm);
+      overflow-x: auto;
+    }
+
+    .editorial-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.92rem;
+    }
+
+    .editorial-table th {
+      padding: 16px 20px;
+      background: var(--card-sand-light);
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border-warm);
+    }
+
+    .editorial-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-warm);
+      color: var(--text-charcoal);
+    }
+
+    .editorial-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Reviews Feed & Cards */
+    .reviews-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .review-filter-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      background: var(--card-sand);
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-pill);
+      padding: 6px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-pill.active, .filter-pill:hover {
+      background: var(--accent-olive);
+      color: #FFFFFF;
+      border-color: var(--accent-olive);
+    }
+
+    .reviews-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .review-card {
+      background: var(--card-sand);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      border: 1px solid var(--border-warm);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+    .review-card:hover {
+      background: var(--card-sand-light);
+      border-color: var(--border-warm-strong);
+    }
+
+    .review-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .review-score-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .star-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent-olive);
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+    }
+    .star-badge.low {
+      background: var(--color-negative);
+    }
+    .star-badge.mid {
+      background: var(--color-warning);
+    }
+
+    .review-headline {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-charcoal);
+    }
+
+    .review-badge-sentiment {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+    }
+    .review-badge-sentiment.pos {
+      background: var(--accent-sage);
+      color: var(--accent-olive);
+      border-color: rgba(86, 99, 68, 0.2);
+    }
+    .review-badge-sentiment.neg {
+      background: #FCE8E6;
+      color: var(--color-negative);
+      border-color: rgba(184, 80, 66, 0.2);
+    }
+    .review-badge-sentiment.neu {
+      background: #EBE8DE;
+      color: var(--color-neutral);
+    }
+
+    .mismatch-alert-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFF4E5;
+      color: var(--color-warning);
+      border: 1px solid #F5D3A9;
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: var(--radius-pill);
+    }
+
+    .review-body-text {
+      font-size: 0.98rem;
+      color: var(--text-charcoal);
+      line-height: 1.65;
+    }
+
+    .review-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid rgba(119, 121, 111, 0.15);
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .reviewer-identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .certified-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--accent-olive);
+      font-weight: 600;
+      font-size: 0.78rem;
+      background: var(--accent-sage);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .vote-counters {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+    }
+
+    /* Responsive Queries */
+    @media (max-width: 1080px) {
+      .hero-headline { font-size: 3.4rem; }
+      .benefits-grid { grid-template-columns: repeat(2, 1fr); }
+      .showcase-grid { grid-template-columns: 1fr; }
+      .landscape-card { grid-template-columns: 1fr; }
+      .col-4, .col-6, .col-8 { grid-column: span 12; }
+      .hero-preview-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .hero-headline { font-size: 2.6rem; }
+      .section-headline { font-size: 2.2rem; }
+      .workspace-title { font-size: 2.4rem; }
+      .benefits-grid { grid-template-columns: 1fr; }
+      .url-input-row { flex-direction: column; align-items: stretch; }
+      .nav-links { display: none; }
+      .site-wrapper { padding: 0 20px; }
+      .scraper-control-card { padding: 24px; }
+      .vis-card { padding: 22px; }
+    }
+  </style>
+</head>
+<body class="{% if page_mode %}mode-active-{{ page_mode }}{% else %}mode-landing{% endif %}">
+
+  <!-- ========================================================
+       TOP NAVIGATION BAR
+       ======================================================== -->
+  <header>
+    <div class="site-wrapper">
+      <div class="nav-inner">
+        <!-- Brand -->
+        <a href="/" class="brand">
+          <div class="brand-mark">A</div>
+          <div class="brand-text-wrap">
+            <span class="brand-title">Flipkart Review Scraper</span>
+            <span class="brand-sub">Area Intelligence Platform</span>
+          </div>
+        </a>
+
+        {% if page_mode %}
+        <!-- Workspace Mode Navigation Switcher -->
+        <div class="mode-tab-bar">
+          <a href="/full-report" class="mode-tab-item {% if page_mode == 'report' %}active{% endif %}">Full Report</a>
+          <a href="/sentiment-mismatches" class="mode-tab-item {% if page_mode == 'sentiment' %}active{% endif %}">Sentiment &amp; Mismatches</a>
+          <a href="/raw-reviews" class="mode-tab-item {% if page_mode == 'raw' %}active{% endif %}">Raw Reviews</a>
+        </div>
+        {% else %}
+        <!-- Landing Page Anchor Links -->
+        <ul class="nav-links">
+          <li><a href="#benefits">Benefits</a></li>
+          <li><a href="#specifications">Specifications</a></li>
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        {% endif %}
+
+        <!-- Right Header Action -->
+        <div class="nav-action">
+          {% if page_mode %}
+          <a href="/" class="btn-pill btn-outline">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Home
+          </a>
+          {% else %}
+          <a href="/full-report" class="btn-pill btn-olive">
+            Start Scraping ↗
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  {% if not page_mode %}
+  <!-- ========================================================
+       LANDING PAGE (Area Editorial Marketing View)
+       ======================================================== -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="site-wrapper">
+        <div class="hero-content">
+          <span class="eyebrow">Area • Customer Sentiment Intelligence</span>
+          <h1 class="hero-headline">Understand Every Review.</h1>
+          <p class="hero-subtitle">
+            Turn thousands of customer reviews into meaningful insights. Analyze sentiment, uncover suspicious reviews, and understand what customers really think.
+          </p>
+          <div class="hero-ctas">
+            <a href="/full-report" class="btn-pill btn-olive" style="padding: 14px 32px; font-size: 1rem;">
+              Explore Platform ↗
+            </a>
+            <a href="#showcase" class="btn-pill btn-outline" style="padding: 14px 28px;">
+              See Solutions ↓
+            </a>
+          </div>
+        </div>
+
+        <!-- Panoramic Analytics Preview Card -->
+        <div class="hero-visual-card">
+          <div class="hero-visual-header">
+            <div>
+              <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 700;">Illustrative Preview Dashboard</span>
+              <h3 style="font-size: 1.8rem; color: var(--text-charcoal); margin-top: 4px;">Live Review Intelligence in Motion</h3>
+            </div>
+            <div class="hero-preview-badge">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-olive); display: inline-block;"></span>
+              Active Preview Model
+            </div>
+          </div>
+
+          <!-- Preview KPI Cards -->
+          <div class="hero-preview-grid">
+            <div class="hero-stat-card">
+              <span class="hero-stat-label">Positive Sentiment</span>
+              <span class="hero-stat-number" style="color: var(--accent-olive);">88.4%</span>
+              <span class="hero-stat-meta">High satisfaction confidence</span>
+            </div>
+            <div class="hero-stat-card">
+              <span class="hero-stat-label">Review Score Consensus</span>
+              <span class="hero-stat-number">4.4 ★</span>
+              <span class="hero-stat-meta">Based on verified buyers</span>
+            </div>
+            <div class="hero-stat-card">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="hero-stat-label">Contradiction Flags</span>
+                <span class="mismatch-alert-tag">⚠️ 6 Mismatches</span>
+              </div>
+              <span class="hero-stat-number" style="color: var(--color-warning);">6.2%</span>
+              <span class="hero-stat-meta">Rating vs text sentiment disparity</span>
+            </div>
+          </div>
+
+          <!-- Density Banner -->
+          <div class="hero-density-banner">
+            <div>
+              <div style="font-weight: 700; color: var(--text-charcoal); font-size: 0.95rem;">Sentiment Density Breakdown</div>
+              <div style="font-size: 0.82rem; color: var(--text-muted);">Aggregated from thousands of verified comments</div>
+            </div>
+            <div class="density-bar-group">
+              <div class="density-meter">
+                <div class="density-segment-pos" title="72% Positive"></div>
+                <div class="density-segment-neu" title="18% Neutral"></div>
+                <div class="density-segment-neg" title="10% Negative"></div>
+              </div>
+              <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-charcoal); min-width: 60px;">
+                72 / 18 / 10
+              </div>
+            </div>
+            <a href="/full-report" class="btn-pill btn-sage" style="padding: 8px 18px; font-size: 0.84rem;">
+              Run on Live Product ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="section-benefits">
+      <div class="site-wrapper">
+        <div class="section-header-centered">
+          <span class="eyebrow">BENEFITS</span>
+          <h2 class="section-headline">We've cracked the code.</h2>
+          <p style="font-size: 1.15rem;">
+            Transform unstructured customer feedback into clear, actionable intelligence.
+          </p>
+        </div>
+
+        <!-- Four Column Feature Grid -->
+        <div class="benefits-grid">
+          <!-- 1. Amplify Insights -->
+          <div class="benefit-card">
+            <div class="benefit-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5v14M7 9v6M22 8v8M2 11v2"></path>
+              </svg>
+            </div>
+            <h3>Amplify Insights</h3>
+            <p>Extract meaningful insights from customer reviews through statistical modeling and automated topic synthesis.</p>
+          </div>
+
+          <!-- 2. Understand Sentiment -->
+          <div class="benefit-card">
+            <div class="benefit-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+              </svg>
+            </div>
+            <h3>Understand Sentiment</h3>
+            <p>Identify positive, negative, and neutral opinions with high-accuracy VADER NLP calibrated for social product reviews.</p>
+          </div>
+
+          <!-- 3. Detect Review Mismatches -->
+          <div class="benefit-card">
+            <div class="benefit-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3>Detect Review Mismatches</h3>
+            <p>Identify inconsistencies between 5-star ratings with complaints or 1-star ratings with praise to detect suspicious feedback.</p>
+          </div>
+
+          <!-- 4. Visualize Growth -->
+          <div class="benefit-card">
+            <div class="benefit-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </div>
+            <h3>Visualize Growth</h3>
+            <p>Explore rating distributions, temporal velocity trends, controversy scores, and geographic reviewer distribution.</p>
+          </div>
+        </div>
+
+        <!-- Landscape Data Visualization Card -->
+        <div class="landscape-card">
+          <div class="landscape-info">
+            <span class="eyebrow" style="background: rgba(255, 255, 255, 0.7);">Geographic &amp; Sentiment Depth</span>
+            <h4>Locate feedback across states.</h4>
+            <p>Our dual-layer scraping engine correlates customer sentiment with certified buyer location demographics across 28+ Indian states and metropolitan territories.</p>
+            <div class="density-pill-grid">
+              <div class="density-pill"><span class="density-dot"></span> Maharashtra (4.2 ★)</div>
+              <div class="density-pill"><span class="density-dot"></span> Karnataka (4.5 ★)</div>
+              <div class="density-pill"><span class="density-dot"></span> Delhi NCR (4.1 ★)</div>
+              <div class="density-pill"><span class="density-dot"></span> Tamil Nadu (4.4 ★)</div>
+            </div>
+          </div>
+          <div class="landscape-graphic">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 700; font-size: 0.95rem; color: var(--text-charcoal);">Regional Sentiment Index</span>
+              <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent-olive);">REAL-TIME GEO MODEL</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">
+                  <span>Metro Hubs</span><span>88% Positive</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 88%;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">
+                  <span>Tier-2 Cities</span><span>79% Positive</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 79%; background: #71815B;"></div></div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">
+                  <span>Regional Shipping Zones</span><span>71% Positive</span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" style="width: 71%; background: #9EA594;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Showcase Section -->
+    <section id="showcase" class="section-showcase">
+      <div class="site-wrapper">
+        <div class="section-header-centered">
+          <span class="eyebrow">WORKSPACES</span>
+          <h2 class="section-headline">See the Big Picture.</h2>
+          <p style="font-size: 1.15rem;">
+            Choose the analysis that matches your requirements.
+          </p>
+        </div>
+
+        <div class="showcase-grid">
+          <!-- 01 — Full Report -->
+          <div class="showcase-card">
+            <div>
+              <span class="showcase-num">01 — COMPLETE INTELLIGENCE</span>
+              <h3 class="showcase-title">Full Report</h3>
+              <p class="showcase-desc">
+                Complete analytics, review collection, sentiment analysis, topic modeling, and demographic visualizations.
+              </p>
+              <ul class="showcase-features">
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  All 6 Core Statistical KPIs &amp; Controversy
+                </li>
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  VADER Sentiment &amp; Rating Cross-Analysis
+                </li>
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  TF-IDF Key Phrases &amp; Geographic Distribution
+                </li>
+              </ul>
+            </div>
+            <a href="/full-report" class="btn-pill btn-olive" style="width: 100%;">
+              Explore ↗
+            </a>
+          </div>
+
+          <!-- 02 — Sentiment & Mismatches -->
+          <div class="showcase-card">
+            <div>
+              <span class="showcase-num">02 — EMOTION &amp; INTEGRITY</span>
+              <h3 class="showcase-title">Sentiment &amp; Mismatches</h3>
+              <p class="showcase-desc">
+                Sentiment classification, rating inconsistencies, and suspicious review detection with rating-versus-text contradiction flags.
+              </p>
+              <ul class="showcase-features">
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Positive, Negative &amp; Neutral Distribution
+                </li>
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Suspicious Review Mismatch Isolation
+                </li>
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  100% Mathematically Reconciled Polarity
+                </li>
+              </ul>
+            </div>
+            <a href="/sentiment-mismatches" class="btn-pill btn-olive" style="width: 100%;">
+              Explore ↗
+            </a>
+          </div>
+
+          <!-- 03 — Raw Reviews Only -->
+          <div class="showcase-card">
+            <div>
+              <span class="showcase-num">03 — VERIFIED DATASET</span>
+              <h3 class="showcase-title">Raw Reviews Only</h3>
+              <p class="showcase-desc">
+                Access and export the original scraped customer reviews with verified buyer status, dates, and helpfulness metrics.
+              </p>
+              <ul class="showcase-features">
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Spacious Clean Review Table with Search
+                </li>
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Zero Unnecessary Chart Overhead
+                </li>
+                <li>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Direct Download in CSV and JSON Formats
+                </li>
+              </ul>
+            </div>
+            <a href="/raw-reviews" class="btn-pill btn-olive" style="width: 100%;">
+              Explore ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Specifications / How It Works -->
+    <section id="how-it-works" class="section-benefits" style="background: var(--card-sand-light);">
+      <div class="site-wrapper">
+        <div class="section-header-centered" style="margin-bottom: 40px;">
+          <span class="eyebrow">HOW IT WORKS</span>
+          <h2 class="section-headline">Three Steps to Truth.</h2>
+        </div>
+        <div class="benefits-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="benefit-card" style="background: #FFFFFF;">
+            <div class="benefit-icon-circle"><span style="font-family: var(--font-mono); font-weight: 700;">01</span></div>
+            <h3>Provide Any Product URL</h3>
+            <p>Paste a standard Flipkart item URL (`/p/`) or direct review section URL (`/product-reviews/`).</p>
+          </div>
+          <div class="benefit-card" style="background: #FFFFFF;">
+            <div class="benefit-icon-circle"><span style="font-family: var(--font-mono); font-weight: 700;">02</span></div>
+            <h3>Dual-Layer Extraction</h3>
+            <p>Our Scrapy crawler extracts React hydration state (`window.__INITIAL_STATE__`) with resilient DOM fallback.</p>
+          </div>
+          <div class="benefit-card" style="background: #FFFFFF;">
+            <div class="benefit-icon-circle"><span style="font-family: var(--font-mono); font-weight: 700;">03</span></div>
+            <h3>Instant NLP &amp; Analytics</h3>
+            <p>VADER sentiment, TF-IDF topic analysis, and controversy scoring are computed in-memory and rendered immediately.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Specifications Details -->
+    <section id="specifications" class="site-wrapper" style="padding: 80px 0;">
+      <div class="landscape-card" style="background: var(--card-sand);">
+        <div>
+          <span class="eyebrow">SPECIFICATIONS</span>
+          <h3 style="font-size: 2.2rem; color: var(--text-charcoal); margin-bottom: 14px;">Reliable Architecture.</h3>
+          <p>Engineered with zero-leak SSRF protection, strict parameter bounds checking, verified buyer isolation, and guaranteed 100.0% mathematical reconciliation.</p>
+        </div>
+        <div class="table-container">
+          <table class="editorial-table">
+            <tbody>
+              <tr><td style="font-weight: 600;">Scraping Engine</td><td style="font-family: var(--font-mono);">Scrapy 2.11+ Headless Crawler</td></tr>
+              <tr><td style="font-weight: 600;">Sentiment Engine</td><td style="font-family: var(--font-mono);">VADER NLP (NLTK Lexicon)</td></tr>
+              <tr><td style="font-weight: 600;">Topic Extraction</td><td style="font-family: var(--font-mono);">Scikit-Learn TF-IDF N-Grams</td></tr>
+              <tr><td style="font-weight: 600;">Security Safeguards</td><td style="font-family: var(--font-mono);">SSRF &amp; Host Guard (RFC 1918)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="section-cta">
+      <div class="site-wrapper">
+        <div class="cta-card">
+          <h2>Ready to uncover the truth?</h2>
+          <p>Turn customer feedback into decisions backed by real insights.</p>
+          <a href="/full-report" class="btn-pill btn-olive" style="padding: 16px 36px; font-size: 1.05rem;">
+            Start Analyzing ↗
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  {% else %}
+  <!-- ========================================================
+       SCRAPING WORKSPACE PAGES (/full-report, /sentiment-mismatches, /raw-reviews)
+       ======================================================== -->
+  <main class="workspace-wrapper">
+    <div class="site-wrapper">
+      
+      <!-- Workspace Page Header -->
+      <div class="workspace-header">
+        <span class="eyebrow">
+          {% if page_mode == 'report' %}WORKSPACE 01 • FULL REPORT{% elif page_mode == 'sentiment' %}WORKSPACE 02 • SENTIMENT &amp; MISMATCHES{% else %}WORKSPACE 03 • RAW REVIEWS{% endif %}
+        </span>
+        <h1 class="workspace-title">
+          {% if page_mode == 'report' %}Complete Review Intelligence.{% elif page_mode == 'sentiment' %}Understand What Customers Feel.{% else %}Every Review. One Place.{% endif %}
+        </h1>
+        <p class="workspace-desc">
+          {% if page_mode == 'report' %}Comprehensive analytics, sentiment distribution, rating breakdowns, topics, and verified customer reviews.{% elif page_mode == 'sentiment' %}Deep VADER NLP sentiment classification, score-text contradiction detection, and suspicious review discovery.{% else %}Clean, unadulterated customer reviews dataset with verified buyer status, timestamps, helpfulness votes, and direct permalinks.{% endif %}
+        </p>
+      </div>
+
+      <!-- Scraper Input Card -->
+      <div class="scraper-control-card">
+        <form id="scraperForm" class="scraper-form" onsubmit="handleScrape(event)">
+          <div class="url-input-row">
+            <div class="url-input-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input 
+                type="url" 
+                id="urlInput" 
+                class="url-input-field" 
+                placeholder="Paste Flipkart product URL or /product-reviews/ URL here..." 
+                required
+              >
+            </div>
+            <button type="submit" id="submitBtn" class="btn-pill btn-olive" style="height: 54px; padding: 0 32px;">
+              {% if page_mode == 'raw' %}Start Scraping ↗{% else %}Start Analysis ↗{% endif %}
+            </button>
+          </div>
+
+          <div class="form-options-row">
+            <div class="options-left">
+              <label for="pagesSelect" style="font-size: 0.88rem; font-weight: 600; color: var(--text-charcoal);">Crawl Depth:</label>
+              <select id="pagesSelect" class="select-dropdown">
+                <option value="all" selected>All Available Reviews (Exhaustive Multi-Sort Crawl)</option>
+                <option value="10">10 Pages (~100 reviews)</option>
+                <option value="5">5 Pages (~50 reviews)</option>
+                <option value="1">1 Page (~10 reviews)</option>
+              </select>
+            </div>
+
+            <div class="export-btn-group">
+              {% if page_mode == 'report' %}
+              <button type="button" id="loadSampleBtn" class="btn-pill btn-sage" onclick="loadSampleData()">
+                ⚡ Load Sample Data
+              </button>
+              {% endif %}
+              <button type="button" id="exportCsvBtn" class="btn-pill btn-outline" onclick="exportData('csv')" disabled>
+                Download CSV
+              </button>
+              <button type="button" id="exportJsonBtn" class="btn-pill btn-outline" onclick="exportData('json')" disabled>
+                Download JSON
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading / Progress State -->
+      <div id="loadingState">
+        <span class="eyebrow" style="background: rgba(255, 255, 255, 0.8);">Headless Crawl Engine</span>
+        <h3 id="progressPhaseText" style="font-size: 1.8rem; color: var(--text-charcoal); margin: 10px 0 6px;">Connecting to Flipkart...</h3>
+        <p id="loadingStatusText" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">Initializing browser headers and fetching review widgets...</p>
+        
+        <div class="progress-bar-track">
+          <div id="progressBarFill" class="progress-bar-fill"></div>
+        </div>
+        <div class="progress-meta">
+          <span>PROGRESS</span>
+          <span id="progressBarPercent">0%</span>
+        </div>
+      </div>
+
+      <!-- Error Box -->
+      <div id="errorBox"></div>
+
+      <!-- Results Dashboard -->
+      <div id="resultsDashboard">
+        
+        {% if page_mode != 'raw' %}
+        <!-- Product Meta Banner -->
+        <div class="product-meta-card">
+          <div class="product-title-wrap">
+            <span style="font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">Analyzed Product</span>
+            <h2 id="productTitle">Product Reviews</h2>
+            <div class="product-stat-tags">
+              <span id="productPrice" class="meta-tag olive">₹0</span>
+              <span id="productRatingsCount" class="meta-tag">0 Ratings</span>
+              <span id="productReviewsCount" class="meta-tag">0 Reviews</span>
+              <span id="productScrapedCount" class="meta-tag olive" style="font-weight: 700; display: none;">0 Verified Reviews Scraped</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if page_mode == 'report' %}
+        <!-- FULL REPORT: 6 Core KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Average Rating</span>
+            <div id="kpiAvgRating" class="kpi-value">--</div>
+            <span class="kpi-sub">Out of 5.0 stars</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Positive Sentiment</span>
+            <div id="kpiPositivePct" class="kpi-value" style="color: var(--accent-olive);">--</div>
+            <span class="kpi-sub">VADER NLP compound score</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Score/Text Mismatches</span>
+            <div id="kpiMismatchCount" class="kpi-value" style="color: var(--color-warning);">--</div>
+            <span class="kpi-sub">Suspicious discrepancies flagged</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Polarization Index</span>
+            <div id="kpiControversy" class="kpi-value">--</div>
+            <span class="kpi-sub">0.0 (consensus) to 1.0 (polarizing)</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Certified Buyers</span>
+            <div id="kpiCertifiedBuyers" class="kpi-value">--</div>
+            <span class="kpi-sub">Flipkart verified purchases</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Helpfulness Ratio</span>
+            <div id="kpiHelpfulness" class="kpi-value">--</div>
+            <span class="kpi-sub">Upvote vs downvote ratio</span>
+          </div>
+        </div>
+
+        <!-- FULL REPORT: Visualizations Grid -->
+        <div class="dashboard-grid">
+          <!-- Star Rating Breakdown -->
+          <div class="vis-card col-4">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Star Breakdown</h3>
+              <span class="eyebrow" style="margin: 0;">Ratings</span>
+            </div>
+            <div id="starBreakdownBars" class="rating-bars-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Sentiment Distribution Doughnut -->
+          <div class="vis-card col-4">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Sentiment Split</h3>
+              <span class="eyebrow" style="margin: 0;">VADER</span>
+            </div>
+            <div class="vis-chart-box">
+              <canvas id="sentimentChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Rating vs Sentiment Cross-Analysis -->
+          <div class="vis-card col-4">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Score vs Text</h3>
+              <span class="eyebrow" style="margin: 0;">Cross Check</span>
+            </div>
+            <div class="vis-chart-box">
+              <canvas id="ratingVsSentimentChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Temporal Review Recency / Velocity -->
+          <div class="vis-card col-6">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Review Volume &amp; Velocity</h3>
+              <span class="eyebrow" style="margin: 0;">Timeline</span>
+            </div>
+            <div class="vis-chart-box">
+              <canvas id="recencyChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Extracted Key Topics & TF-IDF -->
+          <div class="vis-card col-6">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Discovered Topics</h3>
+              <span class="eyebrow" style="margin: 0;">TF-IDF</span>
+            </div>
+            <div id="topicsContainer" class="topics-wrap">
+              <!-- Rendered via JS -->
+            </div>
+            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-warm);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span class="vis-card-title" style="font-size: 1.05rem;">Top Discussion Phrases</span>
+                <span class="eyebrow" style="margin: 0; font-size: 0.68rem;">N-Gram NLP</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                  <div style="font-size: 0.74rem; font-weight: 700; color: var(--accent-olive); text-transform: uppercase; margin-bottom: 8px;">💚 Top Positive</div>
+                  <div id="positivePhrasesContainer" class="phrases-list"></div>
+                </div>
+                <div>
+                  <div style="font-size: 0.74rem; font-weight: 700; color: var(--color-negative); text-transform: uppercase; margin-bottom: 8px;">💔 Top Critical</div>
+                  <div id="negativePhrasesContainer" class="phrases-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Geographic Insights Table -->
+          <div class="vis-card col-12">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Reviewer Locations &amp; State Distribution</h3>
+              <span class="eyebrow" style="margin: 0;">Demographics</span>
+            </div>
+            <div class="table-container">
+              <table class="editorial-table">
+                <thead>
+                  <tr>
+                    <th>Location / State</th>
+                    <th>Scraped Reviews</th>
+                    <th>Average Rating</th>
+                    <th>Sample Share</th>
+                  </tr>
+                </thead>
+                <tbody id="geoTableBody">
+                  <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No geographic insights available yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if page_mode == 'sentiment' %}
+        <!-- SENTIMENT & MISMATCHES WORKSPACE: Dedicated Emotion & Discrepancy View -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Positive Sentiment</span>
+            <div id="kpiPositivePct" class="kpi-value" style="color: var(--accent-olive);">--</div>
+            <span class="kpi-sub">Favorable reviews</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Negative Sentiment</span>
+            <div id="kpiNegativePct" class="kpi-value" style="color: var(--color-negative);">--</div>
+            <span class="kpi-sub">Critical / complaint reviews</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Neutral / Mixed</span>
+            <div id="kpiNeutralPct" class="kpi-value" style="color: var(--color-neutral);">--</div>
+            <span class="kpi-sub">Unbiased or balanced tone</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Flagged Contradictions</span>
+            <div id="kpiMismatchCount" class="kpi-value" style="color: var(--color-warning);">--</div>
+            <span class="kpi-sub">Score-text contradiction count</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Discrepancy Ratio</span>
+            <div id="kpiMismatchPct" class="kpi-value">--</div>
+            <span class="kpi-sub">Share of suspicious reviews</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Mean Polarity Score</span>
+            <div id="kpiAvgScore" class="kpi-value">--</div>
+            <span class="kpi-sub">Scale: -1.0 to +1.0</span>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="vis-card col-6">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Sentiment Distribution</h3>
+              <span class="eyebrow" style="margin: 0;">VADER Model</span>
+            </div>
+            <div class="vis-chart-box">
+              <canvas id="sentimentChart"></canvas>
+            </div>
+          </div>
+
+          <div class="vis-card col-6">
+            <div class="vis-card-header">
+              <h3 class="vis-card-title">Score vs Text Contradiction</h3>
+              <span class="eyebrow" style="margin: 0;">Cross Matrix</span>
+            </div>
+            <div class="vis-chart-box">
+              <canvas id="ratingVsSentimentChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Phrases: Praise vs Criticism -->
+        <div class="vis-card col-12" style="margin-bottom: 32px;">
+          <div class="vis-card-header">
+            <h3 class="vis-card-title">Top Phrases (Praise vs Criticism)</h3>
+            <span class="eyebrow" style="margin: 0;">N-gram NLP</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 16px;">
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--accent-olive); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <span>💚</span> <span>Top Positive Phrases</span>
+              </div>
+              <div id="sentimentPositivePhrasesContainer" class="phrases-list"></div>
+            </div>
+            <div>
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--color-negative); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <span>💔</span> <span>Top Critical Phrases</span>
+              </div>
+              <div id="sentimentNegativePhrasesContainer" class="phrases-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mismatches Callout Banner -->
+        <div class="landscape-card" style="margin-bottom: 32px; background: #FFFBF5; border-color: #F0DFC7;">
+          <div>
+            <span class="eyebrow" style="background: #FBEBD6; color: var(--color-warning); border-color: #EED1AF;">Integrity Detection</span>
+            <h3 style="font-size: 2.2rem; color: var(--text-charcoal); margin: 8px 0 12px;">What are Review Mismatches?</h3>
+            <p>Our NLP cross-references the assigned star score with the lexical polarity of the customer's text. A 5-star review reporting hardware failure or a 1-star review claiming exceptional performance is automatically isolated as a potential mistake, sarcastic comment, or fraudulent submission.</p>
+          </div>
+          <div style="background: #FFFFFF; border-radius: var(--radius-lg); padding: 24px; border: 1px solid #EED1AF;">
+            <div style="font-weight: 700; color: var(--text-charcoal); margin-bottom: 8px;">Key Flag Triggers:</div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.9rem; color: var(--text-muted);">
+              <li>⚠️ 5★ or 4★ rating with negative compound text (≤ -0.05)</li>
+              <li>⚠️ 1★ or 2★ rating with positive compound text (≥ +0.05)</li>
+              <li>⚠️ Sarcastic or contradictory purchase headline</li>
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if page_mode == 'raw' %}
+        <!-- RAW REVIEWS WORKSPACE: Clean Minimal Dataset Banner -->
+        <div class="product-meta-card" style="margin-bottom: 24px;">
+          <div class="product-title-wrap">
+            <span style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">Dataset Collection</span>
+            <h2 id="productTitle">Raw Customer Reviews</h2>
+            <div class="product-stat-tags">
+              <span id="productPrice" class="meta-tag olive">₹0</span>
+              <span id="productRatingsCount" class="meta-tag">0 Ratings</span>
+              <span id="productReviewsCount" class="meta-tag">0 Reviews</span>
+              <span id="productScrapedCount" class="meta-tag olive" style="font-weight: 700; display: none;">0 Verified Reviews Scraped</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews Stream Section -->
+        <div class="vis-card col-12" style="background: #FFFFFF;">
+          <div class="reviews-section-header">
+            <div>
+              <h3 class="vis-card-title">
+                Customer Reviews
+                <span id="reviewsCountBadge" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">(0 shown)</span>
+              </h3>
+            </div>
+            
+            <div class="review-filter-pills">
+              <button type="button" class="filter-pill active" onclick="filterReviews('all', this)">All</button>
+              <button type="button" class="filter-pill" onclick="filterReviews('5', this)">5 ★</button>
+              <button type="button" class="filter-pill" onclick="filterReviews('4', this)">4 ★</button>
+              <button type="button" class="filter-pill" onclick="filterReviews('3', this)">3 ★</button>
+              <button type="button" class="filter-pill" onclick="filterReviews('critical', this)">Critical (1-2 ★)</button>
+              {% if page_mode != 'raw' %}
+              <button type="button" class="filter-pill" onclick="filterReviews('mismatch', this)">⚠️ Mismatches Only</button>
+              {% endif %}
+            </div>
+          </div>
+
+          <div id="reviewsFeed" class="reviews-stream">
+            <!-- Review items dynamically injected here -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+  {% endif %}
+
+  <!-- ========================================================
+       FOOTER
+       ======================================================== -->
+  <footer id="contact">
+    <div class="site-wrapper">
+      <div class="footer-top">
+        <div class="footer-brand-info">
+          <div class="brand" style="margin-bottom: 14px;">
+            <div class="brand-mark">A</div>
+            <div class="brand-text-wrap">
+              <span class="brand-title">Flipkart Review Scraper</span>
+              <span class="brand-sub">Area Intelligence Platform</span>
+            </div>
+          </div>
+          <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.6;">
+            A modern editorial-style intelligence suite transforming raw eCommerce customer feedback into actionable insights, NLP sentiment, and anomaly detection.
+          </p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h5>Navigation</h5>
+            <ul>
+              <li><a href="/#benefits">Benefits</a></li>
+              <li><a href="/#showcase">Workspaces</a></li>
+              <li><a href="/#how-it-works">How It Works</a></li>
+              <li><a href="/#specifications">Specifications</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h5>Workspaces</h5>
+            <ul>
+              <li><a href="/full-report">01 — Full Report</a></li>
+              <li><a href="/sentiment-mismatches">02 — Sentiment &amp; Mismatches</a></li>
+              <li><a href="/raw-reviews">03 — Raw Reviews</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h5>API Endpoints</h5>
+            <ul>
+              <li><a href="/api-info">API Documentation</a></li>
+              <li><a href="/health">Health Status</a></li>
+              <li><a href="/sample-data">Sample Data Endpoint</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 Area Review Intelligence. All rights reserved.</div>
+        <div>Built with Area Editorial Design System • Privacy-Preserving Headless Architecture</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================
+       FRONTEND JAVASCRIPT & STATE MANAGEMENT
+       ======================================================== -->
+  <script>
+    let currentReviews = [];
+    let currentReport = null;
+    let sentimentChartInstance = null;
+    let ratingVsSentimentChartInstance = null;
+    let recencyChartInstance = null;
+
+    const pageMode = "{{ page_mode or '' }}";
+    let progressInterval = null;
+
+    function startProgressBar(targetPages) {
+      const fill = document.getElementById("progressBarFill");
+      const percentText = document.getElementById("progressBarPercent");
+      const phaseText = document.getElementById("progressPhaseText");
+      const statusText = document.getElementById("loadingStatusText");
+
+      let currentPercent = 5;
+      fill.style.width = "5%";
+      percentText.textContent = "5%";
+      phaseText.textContent = "Connecting to Flipkart...";
+      statusText.textContent = "Initializing headless headers & resolving hydration state...";
+
+      const totalTarget = targetPages === "all" ? 8 : Math.max(parseInt(targetPages) || 1, 1);
+      const estTimeSec = totalTarget * 2.2 + 2;
+      const stepIntervalMs = 250;
+      const totalSteps = (estTimeSec * 1000) / stepIntervalMs;
+      const increment = 85 / totalSteps;
+
+      if (progressInterval) clearInterval(progressInterval);
+
+      progressInterval = setInterval(() => {
+        if (currentPercent < 92) {
+          currentPercent += increment * (0.8 + Math.random() * 0.4);
+          const roundVal = Math.min(Math.round(currentPercent), 92);
+          fill.style.width = `${roundVal}%`;
+          percentText.textContent = `${roundVal}%`;
+
+          const pageEstimate = Math.min(Math.ceil((roundVal / 92) * totalTarget), totalTarget);
+          phaseText.textContent = targetPages === "all"
+            ? "Scraping all verified review pages..."
+            : `Scraping verified reviews (page ${pageEstimate} of ${totalTarget})...`;
+          if (roundVal > 55) {
+            statusText.textContent = "Running VADER sentiment, geographic parsing & topic extraction...";
+          }
+        }
+      }, stepIntervalMs);
+    }
+
+    function completeProgressBar() {
+      if (progressInterval) clearInterval(progressInterval);
+      const fill = document.getElementById("progressBarFill");
+      const percentText = document.getElementById("progressBarPercent");
+      const phaseText = document.getElementById("progressPhaseText");
+      fill.style.width = "100%";
+      percentText.textContent = "100%";
+      phaseText.textContent = "Analysis Complete!";
+    }
+
+    async function handleScrape(event) {
+      if (event) event.preventDefault();
+
+      const url = document.getElementById("urlInput").value.trim();
+      if (!url) return;
+
+      const pages = document.getElementById("pagesSelect").value;
+      const mode = pageMode || "report";
+
+      const errorBox = document.getElementById("errorBox");
+      const loadingState = document.getElementById("loadingState");
+      const resultsDashboard = document.getElementById("resultsDashboard");
+      const submitBtn = document.getElementById("submitBtn");
+
+      errorBox.style.display = "none";
+      loadingState.style.display = "block";
+      resultsDashboard.style.display = "none";
+      submitBtn.disabled = true;
+
+      startProgressBar(pages);
+
+      try {
+        let endpoint = "";
+        let params = new URLSearchParams();
+        params.append("url", url);
+        params.append("verified", "true");
+
+        if (pages === "all") {
+          params.append("page", "all");
+          params.append("all_sorts", "true");
+        } else {
+          params.append("max_pages", pages);
+        }
+
+        if (mode === "report") {
+          endpoint = `/v1.0/analytics/report?${params.toString()}`;
+        } else if (mode === "sentiment") {
+          endpoint = `/v1.0/analytics/sentiment?${params.toString()}`;
+        } else {
+          endpoint = `/v1.0/reviews?${params.toString()}`;
+        }
+
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || data.details || data.error || "Scraping request failed");
+        }
+
+        completeProgressBar();
+        setTimeout(() => {
+          renderResults(data, mode);
+          const exportCsv = document.getElementById("exportCsvBtn");
+          const exportJson = document.getElementById("exportJsonBtn");
+          if (exportCsv) exportCsv.disabled = false;
+          if (exportJson) exportJson.disabled = false;
+        }, 300);
+      } catch (err) {
+        if (progressInterval) clearInterval(progressInterval);
+        errorBox.textContent = "Error: " + err.message;
+        errorBox.style.display = "block";
+      } finally {
+        setTimeout(() => {
+          loadingState.style.display = "none";
+          submitBtn.disabled = false;
+        }, 350);
+      }
+    }
+
+    async function loadSampleData() {
+      const loadingState = document.getElementById("loadingState");
+      const errorBox = document.getElementById("errorBox");
+      errorBox.style.display = "none";
+      loadingState.style.display = "block";
+
+      try {
+        const res = await fetch("/sample-data");
+        const data = await res.json();
+        renderResults(data, pageMode || "report");
+        const exportCsv = document.getElementById("exportCsvBtn");
+        const exportJson = document.getElementById("exportJsonBtn");
+        if (exportCsv) exportCsv.disabled = false;
+        if (exportJson) exportJson.disabled = false;
+      } catch (err) {
+        errorBox.textContent = "Failed to load sample data: " + err.message;
+        errorBox.style.display = "block";
+      } finally {
+        loadingState.style.display = "none";
+      }
+    }
+
+    function renderResults(data, mode) {
+      const resultsDashboard = document.getElementById("resultsDashboard");
+      resultsDashboard.style.display = "block";
+
+      let summary = {};
+      let sentimentAgg = {};
+      let topics = [];
+      let reviews = [];
+      let productTitle = "Product Reviews";
+      let price = "";
+      currentReport = data;
+
+      // Unified data extraction across all modes (report, sentiment, raw)
+      summary = data.summary || {};
+      sentimentAgg = data.sentiment || data.aggregate_sentiment || {};
+      topics = data.topics || [];
+      reviews = data.reviews || [];
+      price = data.product_price || "";
+
+      // Raw array response fallback
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          if (item.product_price) price = item.product_price;
+          else if (item.avg_rating || item.total_ratings) summary = item;
+          else if (item.review_content || item.review_score) reviews.push(item);
+        });
+      }
+
+      currentReviews = reviews;
+
+      const prodSum = summary.product_summary || {};
+      const ratingStats = summary.rating_stats || {};
+      const controversyData = summary.controversy || {};
+      const certifiedData = summary.certified_buyers || {};
+      const helpfulData = summary.helpfulness || {};
+
+      let rawTitle = prodSum.title || summary.product_title || (summary.product_summary && summary.product_summary.title) || summary.review_title || "";
+      if (rawTitle.includes(":")) {
+        const colonParts = rawTitle.split(":");
+        if (["product reviews", "reviews", "flipkart"].includes(colonParts[0].trim().toLowerCase())) {
+          rawTitle = colonParts.slice(1).join(":").trim();
+        } else {
+          rawTitle = colonParts[0].trim();
+        }
+      }
+      productTitle = rawTitle || "Product Reviews";
+
+      // Clean generic Flipkart tagline if present in productTitle
+      const genericMarkers = ["buy products online", "all categories", "flipkart.com", "online at best price"];
+      const isGeneric = !productTitle || productTitle.toLowerCase() === "product reviews" || productTitle.toLowerCase() === "reviews" || genericMarkers.some(m => productTitle.toLowerCase().includes(m));
+      if (isGeneric) {
+        const inputUrl = document.getElementById("urlInput") ? document.getElementById("urlInput").value.trim() : "";
+        if (inputUrl) {
+          try {
+            const parsed = new URL(inputUrl);
+            const parts = parsed.pathname.split("/").filter(p => p && p !== "p" && p !== "product-reviews" && p !== "reviews" && !p.toLowerCase().startsWith("itm"));
+            if (parts.length > 0) {
+              const slug = parts[0].replace(/-/g, " ").trim();
+              if (slug) {
+                productTitle = slug.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") + " Reviews";
+              }
+            }
+          } catch (e) {}
+        }
+      }
+
+      // 1. Catalog Total Ratings
+      let rawRatings = prodSum.total_ratings || summary.total_ratings;
+      let totalRatingsStr = "";
+      if (rawRatings) {
+        totalRatingsStr = String(rawRatings).replace(/&/g, "").replace(/\s+/g, " ").trim();
+        if (!totalRatingsStr.toLowerCase().includes("rating")) {
+          totalRatingsStr += " Ratings";
+        }
+      } else if (reviews.length) {
+        totalRatingsStr = `${reviews.length} Ratings`;
+      } else {
+        totalRatingsStr = "Ratings";
+      }
+
+      // 2. Catalog Total Reviews
+      let rawReviews = prodSum.total_reviews || summary.total_reviews;
+      let totalReviewsStr = "";
+      if (rawReviews) {
+        totalReviewsStr = String(rawReviews).replace(/&/g, "").replace(/\s+/g, " ").trim();
+        if (!totalReviewsStr.toLowerCase().includes("review")) {
+          totalReviewsStr += " Reviews";
+        }
+      } else if (reviews.length) {
+        totalReviewsStr = `${reviews.length} Reviews`;
+      } else {
+        totalReviewsStr = "Reviews";
+      }
+
+      // 3. Exact count of Scraped Verified Reviews
+      const scrapedCount = reviews.length;
+      const scrapedBadges = document.querySelectorAll("#productScrapedCount");
+      scrapedBadges.forEach(badge => {
+        badge.textContent = `${scrapedCount} Verified Reviews Scraped`;
+        badge.style.display = "inline-block";
+      });
+
+      const reviewsBadge = document.getElementById("reviewsCountBadge");
+      if (reviewsBadge) {
+        reviewsBadge.textContent = `(${scrapedCount} Verified Reviews Scraped)`;
+      }
+
+      // Product meta tags
+      const titleElem = document.getElementById("productTitle");
+      if (titleElem) titleElem.textContent = productTitle;
+
+      const ratingsElem = document.getElementById("productRatingsCount");
+      if (ratingsElem) ratingsElem.textContent = totalRatingsStr;
+
+      const reviewsElem = document.getElementById("productReviewsCount");
+      if (reviewsElem) reviewsElem.textContent = totalReviewsStr;
+
+      const priceElem = document.getElementById("productPrice");
+      if (priceElem) {
+        if (price) {
+          priceElem.textContent = price;
+          priceElem.style.display = "inline-block";
+        } else {
+          priceElem.style.display = "none";
+        }
+      }
+
+      // KPIs
+      const avgRatingVal = prodSum.avg_rating_flipkart || ratingStats.avg_rating || summary.avg_rating || summary.sample_avg_rating;
+      const kpiAvg = document.getElementById("kpiAvgRating");
+      if (kpiAvg) kpiAvg.textContent = (avgRatingVal != null && avgRatingVal !== "") ? `${avgRatingVal} ★` : "--";
+
+      const posPct = sentimentAgg.positive_pct != null ? `${sentimentAgg.positive_pct}%` : "--";
+      const kpiPos = document.getElementById("kpiPositivePct");
+      if (kpiPos) kpiPos.textContent = posPct;
+
+      const negPct = sentimentAgg.negative_pct != null ? `${sentimentAgg.negative_pct}%` : "--";
+      const kpiNeg = document.getElementById("kpiNegativePct");
+      if (kpiNeg) kpiNeg.textContent = negPct;
+
+      const neuPct = sentimentAgg.neutral_pct != null ? `${sentimentAgg.neutral_pct}%` : "--";
+      const kpiNeu = document.getElementById("kpiNeutralPct");
+      if (kpiNeu) kpiNeu.textContent = neuPct;
+
+      const mismatchCount = (data.score_text_mismatches ? data.score_text_mismatches.length : (sentimentAgg.mismatch_count || 0));
+      const kpiMismatch = document.getElementById("kpiMismatchCount");
+      if (kpiMismatch) kpiMismatch.textContent = mismatchCount;
+
+      const kpiMismatchRatio = document.getElementById("kpiMismatchPct");
+      if (kpiMismatchRatio) {
+        kpiMismatchRatio.textContent = sentimentAgg.mismatch_percentage != null ? `${sentimentAgg.mismatch_percentage}%` : "--";
+      }
+
+      const kpiAvgScore = document.getElementById("kpiAvgScore");
+      if (kpiAvgScore) {
+        kpiAvgScore.textContent = sentimentAgg.avg_sentiment_score != null ? sentimentAgg.avg_sentiment_score.toFixed(2) : "--";
+      }
+
+      const controversyVal = controversyData.score != null ? controversyData.score.toFixed(2) : (summary.controversy_score != null ? summary.controversy_score.toFixed(2) : "--");
+      const kpiControversy = document.getElementById("kpiControversy");
+      if (kpiControversy) kpiControversy.textContent = controversyVal;
+
+      const certifiedPct = certifiedData.percentage != null ? `${Math.round(certifiedData.percentage)}%` : (
+        summary.certified_buyer_pct != null ? `${summary.certified_buyer_pct}%` : (
+          reviews.length > 0 ? `${Math.round((reviews.filter(r => r.certified_buyer).length / reviews.length) * 100)}%` : "--"
+        )
+      );
+      const kpiCert = document.getElementById("kpiCertifiedBuyers");
+      if (kpiCert) kpiCert.textContent = certifiedPct;
+
+      const helpfulRatio = helpfulData.avg_helpfulness_ratio != null 
+        ? `${Math.round(helpfulData.avg_helpfulness_ratio * 100)}%`
+        : (() => {
+            let totalUp = 0;
+            let totalDown = 0;
+            reviews.forEach(r => {
+              totalUp += parseInt(String(r.upvote || 0).replace(/,/g, "")) || 0;
+              totalDown += parseInt(String(r.downvote || 0).replace(/,/g, "")) || 0;
+            });
+            return (totalUp + totalDown) > 0 ? `${Math.round((totalUp / (totalUp + totalDown)) * 100)}%` : "--";
+          })();
+      const kpiHelp = document.getElementById("kpiHelpfulness");
+      if (kpiHelp) kpiHelp.textContent = helpfulRatio;
+
+      // Render Charts & Tables if elements exist
+      if (document.getElementById("starBreakdownBars")) renderRatingBars(summary);
+      if (document.getElementById("sentimentChart")) renderSentimentChart(sentimentAgg);
+      if (document.getElementById("ratingVsSentimentChart")) renderRatingVsSentimentChart(reviews);
+      if (document.getElementById("recencyChart")) renderRecencyChart(reviews);
+      if (document.getElementById("topicsContainer")) renderTopics(topics);
+      if (document.getElementById("positivePhrasesContainer") || document.getElementById("sentimentPositivePhrasesContainer")) {
+        const posPhrases = data.positive_ngrams || data.positive_bigrams || [];
+        const negPhrases = data.negative_ngrams || data.negative_bigrams || [];
+        renderPhrases(posPhrases, negPhrases);
+      }
+      if (document.getElementById("geoTableBody")) renderGeoTable(data.geographic || summary.geographic || {});
+
+      // Reviews Feed
+      renderReviewsFeed(currentReviews);
+    }
+
+    function renderRatingBars(summary) {
+      const container = document.getElementById("starBreakdownBars");
+      if (!container) return;
+      container.innerHTML = "";
+
+      const prodSum = summary.product_summary || {};
+      const distribution = prodSum.star_distribution_flipkart || summary.star_distribution || {
+        "5": summary["5"] || 0,
+        "4": summary["4"] || 0,
+        "3": summary["3"] || 0,
+        "2": summary["2"] || 0,
+        "1": summary["1"] || 0,
+      };
+
+      const numVal = (v) => parseInt(String(v || 0).replace(/,/g, "")) || 0;
+      const total = Object.values(distribution).reduce((acc, v) => acc + numVal(v), 0) || 1;
+
+      for (let star = 5; star >= 1; star--) {
+        const count = numVal(distribution[star] || distribution[String(star)]);
+        const pct = Math.round((count / total) * 100);
+
+        const row = document.createElement("div");
+        row.className = "rating-row";
+        row.innerHTML = `
+          <div class="rating-label">${star} ★</div>
+          <div class="bar-track">
+            <div class="bar-fill bar-${star}" style="width: ${pct}%"></div>
+          </div>
+          <div class="rating-count">${count.toLocaleString()} (${pct}%)</div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    function renderSentimentChart(sentiment) {
+      const canvas = document.getElementById("sentimentChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (sentimentChartInstance) sentimentChartInstance.destroy();
+
+      const dist = sentiment.sentiment_distribution || { POSITIVE: 0, NEGATIVE: 0, NEUTRAL: 0 };
+      const labels = ["Positive", "Neutral", "Negative"];
+      const values = [dist.POSITIVE || 0, dist.NEUTRAL || 0, dist.NEGATIVE || 0];
+
+      sentimentChartInstance = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: ["#566344", "#8A8578", "#B85042"],
+            borderWidth: 3,
+            borderColor: "#EAE5D9",
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                color: "#77796F",
+                boxWidth: 10,
+                font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: 600 }
+              }
+            }
+          },
+          cutout: "72%"
+        }
+      });
+    }
+
+    function renderRatingVsSentimentChart(reviews) {
+      const canvas = document.getElementById("ratingVsSentimentChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (ratingVsSentimentChartInstance) ratingVsSentimentChartInstance.destroy();
+
+      const ratingBuckets = { 
+        "5★": { pos: 0, neg: 0, neu: 0 }, 
+        "4★": { pos: 0, neg: 0, neu: 0 }, 
+        "3★": { pos: 0, neg: 0, neu: 0 }, 
+        "2★": { pos: 0, neg: 0, neu: 0 }, 
+        "1★": { pos: 0, neg: 0, neu: 0 } 
+      };
+
+      reviews.forEach(r => {
+        const star = `${r.review_score || '5'}★`;
+        if (ratingBuckets[star]) {
+          const sent = (r.sentiment_label || 'NEUTRAL').toUpperCase();
+          if (sent === 'POSITIVE') ratingBuckets[star].pos++;
+          else if (sent === 'NEGATIVE') ratingBuckets[star].neg++;
+          else ratingBuckets[star].neu++;
+        }
+      });
+
+      const labels = ["5★", "4★", "3★", "2★", "1★"];
+      const posData = labels.map(l => ratingBuckets[l].pos);
+      const neuData = labels.map(l => ratingBuckets[l].neu);
+      const negData = labels.map(l => ratingBuckets[l].neg);
+
+      ratingVsSentimentChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            { label: "Positive Text", data: posData, backgroundColor: "#566344", borderRadius: 4 },
+            { label: "Neutral Text", data: neuData, backgroundColor: "#DCE4D2", borderRadius: 4 },
+            { label: "Negative Text", data: negData, backgroundColor: "#B85042", borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true, grid: { color: "#E5E2D9" }, ticks: { color: "#77796F", font: { weight: 600 } } },
+            y: { stacked: true, grid: { color: "#E5E2D9" }, ticks: { color: "#77796F" } }
+          },
+          plugins: {
+            legend: { position: "bottom", labels: { color: "#77796F", boxWidth: 10, font: { weight: 600 } } }
+          }
+        }
+      });
+    }
+
+    function renderRecencyChart(reviews) {
+      const canvas = document.getElementById("recencyChart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (recencyChartInstance) recencyChartInstance.destroy();
+
+      const counts = {};
+      reviews.forEach(r => {
+        const d = r.reviewer_date ? r.reviewer_date.trim() : "Recent";
+        counts[d] = (counts[d] || 0) + 1;
+      });
+
+      const sortedEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 7);
+      const labels = sortedEntries.map(e => e[0]);
+      const data = sortedEntries.map(e => e[1]);
+
+      recencyChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels.length ? labels : ["Recent", "1 mo ago", "3 mos ago"],
+          datasets: [{
+            label: "Reviews Volume",
+            data: data.length ? data : [8, 16, 5],
+            borderColor: "#566344",
+            backgroundColor: "rgba(86, 99, 68, 0.12)",
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: "#566344",
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: "#E5E2D9" }, ticks: { color: "#77796F", font: { weight: 600 } } },
+            y: { grid: { color: "#E5E2D9" }, ticks: { color: "#77796F" } }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function renderPhrases(posPhrases, negPhrases) {
+      const posContainers = [
+        document.getElementById("positivePhrasesContainer"),
+        document.getElementById("sentimentPositivePhrasesContainer")
+      ].filter(Boolean);
+
+      const negContainers = [
+        document.getElementById("negativePhrasesContainer"),
+        document.getElementById("sentimentNegativePhrasesContainer")
+      ].filter(Boolean);
+
+      if (!posContainers.length && !negContainers.length) return;
+
+      const makePhraseItem = (item, isPos) => {
+        const phrase = item.ngram || item.phrase || item;
+        const count = item.count || item.frequency || "";
+        const div = document.createElement("div");
+        div.className = `phrase-item ${isPos ? 'pos' : 'neg'}`;
+        div.innerHTML = `
+          <span style="font-weight: 600; color: var(--text-charcoal);">"${escapeHtml(String(phrase))}"</span>
+          ${count ? `<span style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.78rem;">${count}x</span>` : ''}
+        `;
+        return div;
+      };
+
+      posContainers.forEach(container => {
+        container.innerHTML = "";
+        if (!posPhrases || posPhrases.length === 0) {
+          container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; padding: 10px 14px; background: #FFFFFF; border-radius: var(--radius-sm); border: 1px dashed var(--border-warm);">No prominent praise phrases in sample</div>';
+        } else {
+          posPhrases.slice(0, 8).forEach(p => container.appendChild(makePhraseItem(p, true)));
+        }
+      });
+
+      negContainers.forEach(container => {
+        container.innerHTML = "";
+        if (!negPhrases || negPhrases.length === 0) {
+          container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; padding: 10px 14px; background: #FFFFFF; border-radius: var(--radius-sm); border: 1px dashed var(--border-warm);">Consensus is overwhelmingly positive — no critical patterns detected.</div>';
+        } else {
+          negPhrases.slice(0, 8).forEach(p => container.appendChild(makePhraseItem(p, false)));
+        }
+      });
+    }
+
+    function renderTopics(topics) {
+      const container = document.getElementById("topicsContainer");
+      if (!container) return;
+      container.innerHTML = "";
+
+      if (!topics || topics.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.88rem;">No extracted topics found.</div>';
+        return;
+      }
+
+      topics.forEach(t => {
+        const badge = document.createElement("div");
+        badge.className = "topic-pill";
+        const dotClass = t.sentiment_label === "POSITIVE" ? "pos" : (t.sentiment_label === "NEGATIVE" ? "neg" : "neu");
+        badge.innerHTML = `
+          <span class="topic-dot ${dotClass}"></span>
+          <span>${escapeHtml(t.topic)}</span>
+          <span style="color: var(--text-muted); font-size: 0.76rem; font-family: var(--font-mono);">(${t.count || t.frequency || 1})</span>
+        `;
+        container.appendChild(badge);
+      });
+    }
+
+    function renderGeoTable(geo) {
+      const tbody = document.getElementById("geoTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      let items = [];
+      if (geo) {
+        if (Array.isArray(geo.by_state) && geo.by_state.length > 0) {
+          items = geo.by_state.map(s => ({
+            location: s.state,
+            count: s.review_count || s.count || 0,
+            avg_rating: s.avg_rating,
+            share: s.share_of_reviews
+          }));
+        } else if (Array.isArray(geo.top_locations) && geo.top_locations.length > 0) {
+          items = geo.top_locations;
+        } else if (Array.isArray(geo.top_cities) && geo.top_cities.length > 0) {
+          items = geo.top_cities.map(c => ({
+            location: c.city,
+            count: c.review_count || c.count || 0,
+            avg_rating: c.avg_rating,
+            share: c.share_of_reviews
+          }));
+        }
+      }
+
+      if (!items || items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No geographic insights recorded.</td></tr>';
+        return;
+      }
+
+      items.slice(0, 8).forEach(item => {
+        const tr = document.createElement("tr");
+        const count = item.count || 0;
+        const sharePct = item.share != null
+          ? Number(item.share).toFixed(1)
+          : (currentReviews.length ? ((count / currentReviews.length) * 100).toFixed(1) : "0.0");
+        const avgRating = item.avg_rating != null ? Number(item.avg_rating).toFixed(1) : "--";
+        tr.innerHTML = `
+          <td style="font-weight: 600; color: var(--text-charcoal);">${escapeHtml(item.location || item.state || item.city || "Unknown")}</td>
+          <td style="font-family: var(--font-mono);">${count}</td>
+          <td><span style="font-weight: 700; color: var(--accent-olive);">${avgRating}${avgRating === "--" ? "" : " ★"}</span></td>
+          <td style="color: var(--text-muted); font-size: 0.85rem;">${sharePct}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderReviewsFeed(reviews) {
+      const feed = document.getElementById("reviewsFeed");
+      const badge = document.getElementById("reviewsCountBadge");
+      if (badge) badge.textContent = `(${reviews.length} Verified Reviews)`;
+      if (!feed) return;
+      feed.innerHTML = "";
+
+      if (!reviews || reviews.length === 0) {
+        feed.innerHTML = '<div style="padding: 32px; text-align: center; color: var(--text-muted);">No customer reviews found matching the selected filter.</div>';
+        return;
+      }
+
+      reviews.forEach(r => {
+        const item = document.createElement("div");
+        item.className = "review-card";
+
+        const score = parseInt(r.review_score) || 0;
+        const scoreClass = score >= 4 ? "" : (score === 3 ? "mid" : "low");
+
+        const sentiment = r.sentiment_label ? `
+          <span class="review-badge-sentiment ${r.sentiment_label === 'POSITIVE' ? 'pos' : (r.sentiment_label === 'NEGATIVE' ? 'neg' : 'neu')}">${r.sentiment_label}</span>
+        ` : '';
+
+        const mismatch = r.score_text_mismatch ? `
+          <span class="mismatch-alert-tag">⚠️ Score/Text Contradiction</span>
+        ` : '';
+
+        const certified = r.certified_buyer ? `
+          <span class="certified-check">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Certified Buyer
+          </span>
+        ` : '';
+
+        item.innerHTML = `
+          <div class="review-card-top">
+            <div class="review-score-title">
+              <span class="star-badge ${scoreClass}">${score} ★</span>
+              <span class="review-headline">${escapeHtml(r.review_title || "Customer Review")}</span>
+              ${sentiment}
+              ${mismatch}
+            </div>
+            <div class="vote-counters">
+              <span>👍 ${r.upvote || 0}</span>
+              <span>👎 ${r.downvote || 0}</span>
+            </div>
+          </div>
+          <div class="review-body-text">${escapeHtml(r.review_content || "No review content provided.")}</div>
+          <div class="review-card-footer">
+            <div class="reviewer-identity">
+              <span style="font-weight: 600; color: var(--text-charcoal);">${escapeHtml(r.reviewer_name || "Flipkart Customer")}</span>
+              ${certified}
+              <span>${escapeHtml(r.reviewer_location ? r.reviewer_location.replace(/^,\s*/, '') : '')}</span>
+            </div>
+            <div>${escapeHtml(r.reviewer_date || '')}</div>
+          </div>
+        `;
+        feed.appendChild(item);
+      });
+    }
+
+    function filterReviews(type, btn) {
+      document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+
+      if (type === "all") {
+        renderReviewsFeed(currentReviews);
+      } else if (type === "critical") {
+        renderReviewsFeed(currentReviews.filter(r => {
+          const s = parseInt(r.review_score);
+          return s === 1 || s === 2;
+        }));
+      } else if (type === "mismatch") {
+        renderReviewsFeed(currentReviews.filter(r => r.score_text_mismatch));
+      } else {
+        renderReviewsFeed(currentReviews.filter(r => String(r.review_score) === String(type)));
+      }
+    }
+
+    function convertReviewsToCsv(reviews) {
+      if (!reviews || !reviews.length) return "";
+      
+      const columns = [
+        "review_id",
+        "review_score",
+        "review_title",
+        "review_content",
+        "reviewer_name",
+        "reviewer_location",
+        "reviewer_date",
+        "certified_buyer",
+        "permalink",
+        "upvote",
+        "downvote",
+        "sentiment_label",
+        "sentiment_score",
+        "score_text_mismatch"
+      ];
+
+      const header = columns.join(",");
+      const rows = reviews.map(r => {
+        return columns.map(col => {
+          let val = r[col];
+          if (val === undefined || val === null) val = "";
+          val = String(val).replace(/"/g, '""');
+          return `"${val}"`;
+        }).join(",");
+      });
+
+      return [header, ...rows].join("\r\n");
+    }
+
+    function exportData(format) {
+      if (format === "csv") {
+        if (!currentReviews || !currentReviews.length) {
+          alert("No reviews available to export. Please run a scrape first.");
+          return;
+        }
+        const csvText = "\uFEFF" + convertReviewsToCsv(currentReviews);
+        const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = `${pageMode || "flipkart"}-reviews.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+        return;
+      }
+
+      if (format === "json") {
+        const payload = currentReport || { reviews: currentReviews };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = `${pageMode || "flipkart"}-report.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+        return;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>

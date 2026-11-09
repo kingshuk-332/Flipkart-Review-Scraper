@@ -1,0 +1,13 @@
+Flask>=3.0.0
+gunicorn>=21.0.0; sys_platform != 'win32'
+waitress>=3.0.0; sys_platform == 'win32'
+scrapy>=2.11.0
+
+# Analytics dependencies
+nltk>=3.9.0
+scikit-learn>=1.5.0
+pandas>=2.2.0
+openpyxl>=3.1.0
+
+# Testing
+pytest>=7.0.0
