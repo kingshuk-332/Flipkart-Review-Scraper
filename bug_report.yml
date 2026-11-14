@@ -1,0 +1,102 @@
+name: Bug Report / DOM Structure Change
+description: Report broken review extraction, Flipkart UI/DOM changes, or parser errors.
+title: "[Bug]: "
+labels: ["bug", "dom-update", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping keep the Flipkart Review Scraper functional!
+        Please fill out this form to help us locate and resolve scraping regressions quickly.
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Bug Classification
+      description: What category best fits this issue?
+      options:
+        - "DOM / CSS Selector Change (Flipkart modified page markup)"
+        - "Pagination Failure (Next page button / token missing)"
+        - "HTTP / Network Block (Rate limit, CAPTCHA, 403 Forbidden)"
+        - "Downstream Integration Error (CLI output / parsing failure)"
+        - "Other Scraping Exception"
+    validations:
+      required: true
+
+  - type: input
+    id: target-url
+    attributes:
+      label: Target Flipkart Product / Review URL
+      description: Provide the exact URL that triggered the failure.
+      placeholder: "https://www.flipkart.com/.../product-reviews/..."
+    validations:
+      required: true
+
+  - type: input
+    id: cli-command
+    attributes:
+      label: CLI Command Executed
+      description: The exact command line input used.
+      placeholder: "python scraper.py --url '<FLIPKART_URL>' --pages 3 --output reviews.csv"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A concise explanation of what you expected to happen.
+      placeholder: "Expected reviews (ratings, titles, descriptions, reviewer names) to be extracted and saved to output file."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior / Error Output
+      description: What happened instead? Please paste the full terminal output, traceback, or parser error.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: dom-inspection
+    attributes:
+      label: Inspected DOM Details (If applicable)
+      description: If Flipkart updated their classes or tags, paste the current HTML snippet or class name here.
+      placeholder: "<div class=\"_27M-vq\">...</div> or newly observed selector"
+      render: html
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment-os
+    attributes:
+      label: Operating System
+      options:
+        - "Ubuntu / Linux"
+        - "Windows 11 / 10"
+        - "macOS"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      placeholder: "e.g., Python 3.10.12, 3.12, 3.13"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: "I have confirmed that the issue reproduces with the latest commit on the `main` branch."
+          required: true
+        - label: "I checked the issue tracker to ensure this bug has not already been reported."
+          required: true
+        - label: "The target URL is currently accessible in a standard browser without login."
+          required: false
